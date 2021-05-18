@@ -16,6 +16,21 @@ This project consists of two parts:
 2. Register a new domain name and configure secured connection using SSL/TLS certificates
 
 
+## Register a new domain name and configure secured connection using SSL/TLS certificates
+
+1. Register on my.freenom.com and create a new domain name
+
+2. Go to your AWS console on Route 53 dashboard, create a hosted zone and paste your new domain name in the domain name tab
+
+
+![alt text](image1.jpg)
+
+3. For your Route 53 hosted zone to be connected to your domain name copy the name servers from route 53 to the free domain we just created
+
+4.Spin up your EC2 instance, copy the public ip ,go to your Route53 create a record and paste the public ip to the value tab and create the record. create a second record for www.yourdomainname
+
+These steps will ensure a secured handshake between the Nginx Load Balancer, Cloud DNS and the Web Servers.
+
 ## Configure Nginx as a Load Balancer
 
 a. Create an EC2 VM based on Ubuntu Server 20.04 LTS and name it Nginx LB (do not forget to open TCP port 80 for HTTP connections, also open TCP port 443 - this port is used for secured HTTPS connections)
@@ -36,24 +51,41 @@ sudo systemctl status nginx
 
 ```
 
+
 d. Create a config file for nginx, 
 
 `sudo vi /etc/nginx/sites-available/load_balancer.conf`
 
-## Register a new domain name and configure secured connection using SSL/TLS certificates
+```
+#insert following configuration into http section
 
-1. Register on my.freenom.com and create a new domain name
+upstream myproject {
+    server Web1 weight=5;
+    server Web2 weight=5;
+  }
+server {
+    listen 80;
+    server_name thecodingmun.tk www.thecodingmum.tk;
+    location / {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_pass http://myproject;
+    }
+  }
 
-2. Go to your AWS console on Route 53 dashboard, create a hosted zone and paste your new domain name in the domain name tab
-
-
-![alt text](image1.jpg)
-
-3. For your Route 53 hosted zone to be connected to your domain name copy the name servers from route 53 to the free domain we just created
-
-
-
-
+#comment out this line
+#       include /etc/nginx/sites-enabled/*;
 ```
 
-```
+d. Remove the default nginx config file;
+`sudo rm -rf /etc/nginx/sites-enabled/default`
+
+e. link the sites-avalaible and sites-enabled together
+
+`sudo ln -s /etc/nginx/sites-available /etc/nginx/sites-enabled`
+
+f. Test that your NGINX configuration is correct
+ `sudo nginx -t`
+
+g. Now reload Nginx 
+`sudo systemctl reload nginx`
+
