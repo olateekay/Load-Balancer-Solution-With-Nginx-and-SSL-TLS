@@ -89,3 +89,28 @@ f. Test that your NGINX configuration is correct
 g. Now reload Nginx 
 `sudo systemctl reload nginx`
 
+## Install Certbot
+
+`sudo apt install certbot`
+
+Also install a certbot dependency
+
+`sudo apt install python3-certbot-nginx -y`
+
+Request for a TLS certificate for your domain:
+`sudo certbot --nginx -d thecodingmum.tk -d www.thecodingmum.tk`
+
+Your website will load with the HTTPS protocol (that uses TCP port 443) and see a padlock pictogram in your browser’s search string. Click on the padlock icon and you can see the details of the certificate issued for your website
+
+By default, LetsEncrypt certificate is valid for 90 days, so it is recommended to renew it at least every 60 days or more frequently.
+Best pracice is to have a scheduled job that to run renew command periodically. Let us configure a cronjob to run the command twice a day.
+
+To do so, lets edit the crontab file with the following command:
+
+`crontab -e`
+Add following line:
+
+`* */12 * * *   root /usr/bin/certbot renew > /dev/null 2>&1`
+You can always change the interval of this cronjob if twice a day is too often by adjusting schedule expression.
+
+You have just implemented an Nginx Load Balancing Web Solution with secured HTTPS connection with periodically updated SSL/TLS certificates.
